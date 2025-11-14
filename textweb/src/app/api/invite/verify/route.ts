@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     name: 'invite_code',
     value: normalizedCode,
     httpOnly: true,
-    secure: true,
+    secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
     maxAge: 15 * 60
