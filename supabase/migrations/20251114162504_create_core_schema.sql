@@ -61,18 +61,28 @@ ALTER TABLE public.invite_codes ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "own_profile" ON public.profiles
 FOR ALL USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
 
--- RLS: Admin full (DOĞRU: JWT üzerinden metadata)
-CREATE POLICY "admin_full" ON public.profiles
-FOR ALL USING ((auth.jwt() ->> 'is_admin')::boolean = true);
+-- RLS: Admin full (profiles.is_admin)
+CREATE POLICY "admin_full_profiles" ON public.profiles
+FOR ALL USING (
+  EXISTS (
+    SELECT 1 FROM public.profiles p 
+    WHERE p.id = auth.uid() AND p.is_admin = true
+  )
+);
 
--- Diğer tablolar için admin (DOĞRU)
+-- Diğer tablolar için admin
 DO $$
 DECLARE tbl TEXT;
 BEGIN
   FOREACH tbl IN ARRAY ARRAY['participant_types','roles','user_roles','invite_codes'] LOOP
     EXECUTE format('
       CREATE POLICY "admin_full_%I" ON public.%I
-      FOR ALL USING ((auth.jwt() ->> ''is_admin'')::boolean = true);
+      FOR ALL USING (
+        EXISTS (
+          SELECT 1 FROM public.profiles p 
+          WHERE p.id = auth.uid() AND p.is_admin = true
+        )
+      );
     ', tbl, tbl);
   END LOOP;
 END $$;
