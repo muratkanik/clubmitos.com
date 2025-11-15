@@ -17,18 +17,39 @@ export default function Admin() {
   useEffect(() => {
     if (user) {
       checkAdmin();
+    } else {
+      setLoading(false);
     }
   }, [user]);
 
   const checkAdmin = async () => {
-    const { data } = await supabase.from('users').select('*').eq('auth_user_id', user?.id).single();
-    setIsAdmin(data?.role === 'admin');
-    if (data?.role === 'admin') {
-      loadUsers();
-      loadCodes();
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('auth_user_id', user?.id)
+        .single();
+      
+      if (error) {
+        console.error('Error checking admin:', error);
+        setIsAdmin(false);
+        setLoading(false);
+        return;
+      }
+
+      setIsAdmin(data?.role === 'admin');
+      if (data?.role === 'admin') {
+        await loadUsers();
+        await loadCodes();
+      }
+    } catch (err) {
+      console.error('Exception in checkAdmin:', err);
+      setIsAdmin(false);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
+
 
   const loadUsers = async () => {
     const { data } = await supabase.from('users').select('*').order('created_at', { ascending: false });
@@ -43,10 +64,25 @@ export default function Admin() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0f172a] flex items-center justify-center">
-        <div className="text-[#d4af37]">Loading...</div>
+        <div className="text-[#d4af37] text-center">
+          <div className="text-2xl mb-2">Loading...</div>
+          <div className="text-sm text-gray-400">Checking admin permissions...</div>
+        </div>
       </div>
     );
   }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center">
+        <div className="text-[#d4af37] text-center">
+          <div className="text-2xl mb-2">Not Logged In</div>
+          <div className="text-sm text-gray-400">Please log in to access the admin panel.</div>
+        </div>
+      </div>
+    );
+  }
+
 
   if (!isAdmin) {
     return (
