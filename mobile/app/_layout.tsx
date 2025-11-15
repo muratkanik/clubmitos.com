@@ -1,17 +1,21 @@
 import { Stack } from 'expo-router';
-import { AuthProvider } from '@/providers/AuthProvider';
-import '../global.css';
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="login" />
-        <Stack.Screen name="invite-code" />
-      </Stack>
-    </AuthProvider>
+    <Stack
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: '#0f172a',
+        },
+        headerTintColor: '#d4af37',
+        contentStyle: {
+          backgroundColor: '#0f172a',
+        },
+      }}
+    >
+      <Stack.Screen name="login" options={{ headerShown: false }} />
+      <Stack.Screen name="invite-code" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+    </Stack>
   );
 }
-
-

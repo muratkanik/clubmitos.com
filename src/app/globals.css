@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-navy text-white;
+  }
+}
+
+@layer utilities {
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-lg border border-gold/20 rounded-2xl;
+  }
+  
+  .btn-gold {
+    @apply px-8 py-4 bg-gold text-navy font-semibold rounded-lg hover:bg-[#f0c857] transition-all;
+  }
+  
+  .btn-gold-outline {
+    @apply px-8 py-4 bg-gold/10 text-gold border-2 border-gold rounded-lg hover:bg-gold/20 transition-all;
+  }
+}
