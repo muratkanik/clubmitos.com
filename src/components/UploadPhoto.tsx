@@ -6,29 +6,47 @@ import Image from 'next/image';
 export default function UploadPhoto({ userId, currentUrl }: { userId: string; currentUrl?: string | null }) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(currentUrl);
+  const [error, setError] = useState('');
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setUploading(true);
-    const filePath = `${userId}/avatar.jpg`;
+    setError('');
 
-    const { error: uploadError } = await supabase.storage
-      .from('profile-photos')
-      .upload(filePath, file, { upsert: true });
+    try {
+      const filePath = `${userId}/avatar.jpg`;
 
-    if (uploadError) {
-      alert('Upload failed');
+      const { error: uploadError } = await supabase.storage
+        .from('profile-photos')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        setError('Upload failed. Please try again.');
+        setUploading(false);
+        return;
+      }
+
+      const { data } = supabase.storage.from('profile-photos').getPublicUrl(filePath);
+      
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ profile_photo_url: data.publicUrl })
+        .eq('auth_user_id', userId);
+
+      if (updateError) {
+        setError('Failed to update profile');
+        setUploading(false);
+        return;
+      }
+
+      setPreview(data.publicUrl + '?t=' + Date.now());
       setUploading(false);
-      return;
+    } catch (err) {
+      setError('An error occurred');
+      setUploading(false);
     }
-
-    const { data } = supabase.storage.from('profile-photos').getPublicUrl(filePath);
-    await supabase.from('profiles').update({ profile_photo_url: data.publicUrl }).eq('id', userId);
-
-    setPreview(data.publicUrl);
-    setUploading(false);
   };
 
   return (
@@ -42,6 +60,7 @@ export default function UploadPhoto({ userId, currentUrl }: { userId: string; cu
           </div>
         )}
       </div>
+      {error && <p className="text-red-400 text-sm">{error}</p>}
       <label className="px-6 py-2 bg-[#d4af37] text-[#0f172a] rounded-lg cursor-pointer hover:bg-[#f0c857] transition-all">
         {uploading ? 'Uploading...' : 'Upload Photo'}
         <input type="file" accept="image/*" onChange={handleUpload} className="hidden" disabled={uploading} />

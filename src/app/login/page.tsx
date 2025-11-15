@@ -17,10 +17,11 @@ export default function LoginPage() {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/invite-code`,
+        redirectTo: 'https://clubmitos.com/auth/callback',
       },
     });
   };
+
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 

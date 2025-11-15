@@ -10,18 +10,39 @@ export default function InviteCodePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [hasProfile, setHasProfile] = useState(false);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    if (!loading && !user) router.push('/login');
+    if (!loading && !user) {
+      router.push('/login');
+      return;
+    }
     if (user) {
-      supabase.from('profiles').select('*').eq('id', user.id).single().then(({ data }) => {
-        if (data) router.push('/profile');
-        setHasProfile(!!data);
-      });
+      checkProfile();
     }
   }, [user, loading, router]);
 
-  if (loading || hasProfile) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  const checkProfile = async () => {
+    const { data } = await supabase
+      .from('users')
+      .select('*')
+      .eq('auth_user_id', user!.id)
+      .single();
+    
+    if (data) {
+      router.push('/profile');
+    }
+    setHasProfile(!!data);
+    setChecking(false);
+  };
+
+  if (loading || checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a]">
+        <div className="text-[#d4af37]">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a]">
